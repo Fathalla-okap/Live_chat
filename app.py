@@ -1,6 +1,3 @@
-import eventlet
-eventlet.monkey_patch()
-
 from flask import Flask, render_template, request, session
 from flask_socketio import SocketIO, send, emit
 from datetime import datetime
@@ -39,7 +36,7 @@ def handle_message(msg):
         'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     }
     messages.append(message)
-    send(message, broadcast=True)
+    emit('message', message, broadcast=True)
 
 if __name__ == '__main__':
     socketio.run(app, debug=True)
