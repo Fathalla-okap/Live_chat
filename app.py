@@ -19,7 +19,7 @@ def index():
 
 @socketio.on('connect')
 def handle_connect():
-    user_id = str(uuid.uuid4())
+    user_id = 'Unknown'
     users[request.sid] = user_id
     session['user_id'] = user_id
     emit('assign_user_id', user_id)
