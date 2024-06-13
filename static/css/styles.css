@@ -18,12 +18,6 @@ body {
     flex-direction: column;
 }
 
-#info-container {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 10px;
-}
-
 #chat-box {
     height: 300px;
     border: 1px solid #ddd;
@@ -40,10 +34,10 @@ body {
     padding: 10px;
     margin-bottom: 10px;
     border-bottom: 1px solid #ddd;
-    word-wrap: break-word;
-    max-width: 90%;
-    word-break: break-all;
-    font-size: 14px;
+    word-wrap: break-word;   /* تجزئة النص عند الحواف */
+    max-width: 90%;          /* تحديد أقصى عرض للرسالة */
+    word-break: break-all;   /* كسر الكلمات الطويلة */
+    font-size: 14px;         /* تصغير حجم الخط */
 }
 
 .message strong {
@@ -51,10 +45,10 @@ body {
 }
 
 .message .timestamp {
-    display: block;
+    display: block;  /* عرض الوقت في سطر منفصل */
     font-size: 0.8em;
     color: #888;
-    margin-top: 5px;
+    margin-top: 5px;  /* مسافة بين الرسالة والوقت */
 }
 
 #message {
@@ -63,7 +57,7 @@ body {
     border-radius: 5px;
     flex-grow: 1;
     margin-right: 10px;
-    font-size: 14px;
+    font-size: 14px;  /* تصغير حجم الخط لصندوق النص */
 }
 
 #send-button {
@@ -73,7 +67,7 @@ body {
     color: white;
     border-radius: 5px;
     cursor: pointer;
-    font-size: 14px;
+    font-size: 14px;  /* تصغير حجم الخط لزر الإرسال */
 }
 
 #send-button:hover {
