@@ -5,10 +5,8 @@ document.addEventListener('DOMContentLoaded', (event) => {
     const messageInput = document.getElementById('message');
     const sendButton = document.getElementById('send-button');
 
-    let userId;
-
     socket.on('assign_user_id', (id) => {
-        userId = id;
+        // Not needed to do anything since all users are 'Unknown'
     });
 
     socket.on('load_messages', (messages) => {
@@ -19,13 +17,13 @@ document.addEventListener('DOMContentLoaded', (event) => {
     sendButton.addEventListener('click', () => {
         const message = messageInput.value;
         if (message) {
-            socket.emit('message', message);
-            messageInput.value = '';
+            socket.emit('message', message); // Emit the message to the server
+            messageInput.value = ''; // Clear input field after sending
         }
     });
 
     socket.on('message', (msg) => {
-        displayMessage(msg);
+        displayMessage(msg); // Display incoming message
     });
 
     function displayMessage(msg) {
@@ -33,6 +31,6 @@ document.addEventListener('DOMContentLoaded', (event) => {
         messageElement.className = 'message';
         messageElement.innerHTML = `<strong>${msg.user}:</strong> ${msg.text} <span class="timestamp">${msg.timestamp}</span>`;
         chatBox.appendChild(messageElement);
-        chatBox.scrollTop = chatBox.scrollHeight;
+        chatBox.scrollTop = chatBox.scrollHeight; // Scroll to bottom of chat box
     }
 });
