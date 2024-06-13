@@ -1,14 +1,14 @@
 import eventlet
 eventlet.monkey_patch()
 
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, session
 from flask_socketio import SocketIO, send, emit
 from datetime import datetime
 import uuid
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your_secret_key'
-socketio = SocketIO(app, async_mode='eventlet')
+socketio = SocketIO(app, async_mode='eventlet', manage_session=True)
 
 messages = []
 users = {}
@@ -21,6 +21,7 @@ def index():
 def handle_connect():
     user_id = str(uuid.uuid4())
     users[request.sid] = user_id
+    session['user_id'] = user_id
     emit('assign_user_id', user_id)
     emit('load_messages', messages, to=request.sid)
 
@@ -31,7 +32,7 @@ def handle_disconnect():
 
 @socketio.on('message')
 def handle_message(msg):
-    user_id = users.get(request.sid, 'Unknown')
+    user_id = session.get('user_id', 'Unknown')
     message = {
         'user': user_id,
         'text': msg,
