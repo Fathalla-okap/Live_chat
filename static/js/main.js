@@ -5,8 +5,10 @@ document.addEventListener('DOMContentLoaded', (event) => {
     const messageInput = document.getElementById('message');
     const sendButton = document.getElementById('send-button');
 
+    let userId;
+
     socket.on('assign_user_id', (id) => {
-        // Not needed to do anything since all users are 'Unknown'
+        userId = id;
     });
 
     socket.on('load_messages', (messages) => {
@@ -17,7 +19,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
     sendButton.addEventListener('click', () => {
         const message = messageInput.value;
         if (message) {
-            socket.send(message);
+            socket.emit('message', message);
             messageInput.value = '';
         }
     });
