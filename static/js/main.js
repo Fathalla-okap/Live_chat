@@ -5,13 +5,12 @@ document.addEventListener('DOMContentLoaded', (event) => {
     const messageInput = document.getElementById('message');
     const sendButton = document.getElementById('send-button');
 
-    let userId;
-
     socket.on('assign_user_id', (id) => {
-        userId = id;
+        // Not needed to do anything since all users are 'Unknown'
     });
 
     socket.on('load_messages', (messages) => {
+        chatBox.innerHTML = ''; // Clear chat box before loading messages
         messages.forEach(msg => displayMessage(msg));
     });
 
