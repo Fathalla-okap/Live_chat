@@ -4,15 +4,70 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Live Chat</title>
-    <link rel="stylesheet" href="/static/css/styles.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 </head>
 <body>
-    <div id="chat-container">
-        <div id="chat-box"></div>
-        <input type="text" id="message" placeholder="Type a message...">
-        <button id="send-button">Send</button>
+    <div class="container">
+        <header>
+            <h1>Live Chat</h1>
+        </header>
+        <main>
+            <div id="chat-container">
+                <div id="messages">
+                    <!-- Messages will be displayed here -->
+                </div>
+                <form id="message-form">
+                    <input type="text" id="message-input" placeholder="Type your message...">
+                    <button type="submit">Send</button>
+                </form>
+            </div>
+        </main>
     </div>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.0/socket.io.min.js"></script>
-    <script src="/static/js/main.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            function loadMessages() {
+                $.getJSON('/get_messages', function(data) {
+                    $('#messages').empty();
+                    $.each(data.messages, function(index, message) {
+                        $('#messages').append('<div class="message">' + message + '</div>');
+                    });
+                    scrollChatToBottom();
+                });
+            }
+
+            function scrollChatToBottom() {
+                $('#messages').scrollTop($('#messages')[0].scrollHeight);
+            }
+
+            loadMessages();
+
+            $('#message-form').submit(function(event) {
+                event.preventDefault();
+                var message = $('#message-input').val();
+                $.ajax({
+                    url: '/send_message',
+                    type: 'POST',
+                    data: { message: message },
+                    success: function(response) {
+                        if (response.status === 'OK') {
+                            $('#message-input').val('');
+                            loadMessages();
+                        } else {
+                            alert('Error: ' + response.message);
+                        }
+                    }
+                });
+            });
+
+            var messageBox = document.getElementById('messages');
+            messageBox.addEventListener('DOMNodeInserted', function(event) {
+                if (event.target.tagName === 'DIV') {
+                    scrollChatToBottom();
+                }
+            });
+        });
+    </script>
 </body>
 </html>
