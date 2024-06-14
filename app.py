@@ -1,42 +1,35 @@
-from flask import Flask, render_template, request, session
-from flask_socketio import SocketIO, send, emit
-from datetime import datetime
-import uuid
+# File: app.py
+from flask import Flask, render_template, request, jsonify
+import random
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'your_secret_key'
-socketio = SocketIO(app, async_mode='eventlet', manage_session=True)
 
+# In-memory storage for messages (for demonstration purposes)
 messages = []
-users = {}
+
+# List of random names for "unknown" users
+names = ['Unknown']
 
 @app.route('/')
 def index():
     return render_template('index.html')
 
-@socketio.on('connect')
-def handle_connect():
-    user_id = 'Unknown'
-    users[request.sid] = user_id
-    session['user_id'] = user_id
-    emit('assign_user_id', user_id)
-    emit('load_messages', messages, to=request.sid)
+@app.route('/send_message', methods=['POST'])
+def send_message():
+    message = request.form.get('message')
+    if message:
+        # Generate a random name from the list
+        name = random.choice(names)
+        # Format message as "name: message"
+        formatted_message = f"{name}: {message}"
+        messages.append(formatted_message)
+        return jsonify({'status': 'OK', 'message': 'Message sent successfully'})
+    else:
+        return jsonify({'status': 'ERROR', 'message': 'Message cannot be empty'})
 
-@socketio.on('disconnect')
-def handle_disconnect():
-    if request.sid in users:
-        del users[request.sid]
-
-@socketio.on('message')
-def handle_message(msg):
-    user_id = session.get('user_id', 'Unknown')
-    message = {
-        'user': user_id,
-        'text': msg,
-        'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    }
-    messages.append(message)
-    emit('message', message, broadcast=True)
+@app.route('/get_messages')
+def get_messages():
+    return jsonify({'messages': messages})
 
 if __name__ == '__main__':
-    socketio.run(app, debug=True)
+    app.run(debug=True)
