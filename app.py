@@ -1,38 +1,44 @@
-import eventlet
-eventlet.monkey_patch()
-
-# File: app.py
-from flask import Flask, render_template, request, jsonify
-import random
+import os
+from flask import Flask, render_template, request
+from flask_socketio import SocketIO, send, emit
+from datetime import datetime
+from gevent import monkey
+monkey.patch_all()
 
 app = Flask(__name__)
+app.config['SECRET_KEY'] = 'your_secret_key'
+socketio = SocketIO(app, async_mode='gevent')
 
-# In-memory storage for messages (for demonstration purposes)
 messages = []
-
-# List of random names for "unknown" users
-names = ['Unknown']
+users = {}
 
 @app.route('/')
 def index():
     return render_template('index.html')
 
-@app.route('/send_message', methods=['POST'])
-def send_message():
-    message = request.form.get('message')
-    if message:
-        # Generate a random name from the list
-        name = random.choice(names)
-        # Format message as "name: message"
-        formatted_message = f"{name}: {message}"
-        messages.append(formatted_message)
-        return jsonify({'status': 'OK', 'message': 'Message sent successfully'})
-    else:
-        return jsonify({'status': 'ERROR', 'message': 'Message cannot be empty'})
+@socketio.on('connect')
+def handle_connect():
+    user_id = 'Unknown'
+    users[request.sid] = user_id
+    emit('assign_user_id', user_id)
+    emit('load_messages', messages, to=request.sid)
 
-@app.route('/get_messages')
-def get_messages():
-    return jsonify({'messages': messages})
+@socketio.on('disconnect')
+def handle_disconnect():
+    if request.sid in users:
+        del users[request.sid]
+
+@socketio.on('message')
+def handle_message(msg):
+    user_id = users.get(request.sid, 'Unknown')
+    message = {
+        'user': user_id,
+        'text': msg,
+        'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    }
+    messages.append(message)
+    send(message, broadcast=True)
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    port = int(os.environ.get('PORT', 5000))
+    socketio.run(app, host='0.0.0.0', port=port)
