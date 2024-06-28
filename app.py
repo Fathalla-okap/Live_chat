@@ -1,44 +1,42 @@
-import os
-from flask import Flask, render_template, request
-from flask_socketio import SocketIO, send, emit
-from datetime import datetime
-from gevent import monkey
-monkey.patch_all()
+from flask import Flask, render_template, request, jsonify
+from flask_socketio import SocketIO, emit
+from flask_sqlalchemy import SQLAlchemy
 
+# إعداد التطبيق
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your_secret_key'
-socketio = SocketIO(app, async_mode='gevent')
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///chat.db'
 
-messages = []
-users = {}
+# إعداد قاعدة البيانات وسوكيت
+db = SQLAlchemy(app)
+socketio = SocketIO(app)
 
+# تعريف نموذج الرسالة
+class Message(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    text = db.Column(db.String(200), nullable=False)
+
+# مسارات التطبيق
 @app.route('/')
 def index():
     return render_template('index.html')
 
-@socketio.on('connect')
-def handle_connect():
-    user_id = 'Unknown'
-    users[request.sid] = user_id
-    emit('assign_user_id', user_id)
-    emit('load_messages', messages, to=request.sid)
+@app.route('/messages')
+def get_messages():
+    messages = Message.query.all()
+    return jsonify([{'text': msg.text} for msg in messages])
 
-@socketio.on('disconnect')
-def handle_disconnect():
-    if request.sid in users:
-        del users[request.sid]
-
+# معالجة الرسائل عبر سوكيت
 @socketio.on('message')
 def handle_message(msg):
-    user_id = users.get(request.sid, 'Unknown')
-    message = {
-        'user': user_id,
-        'text': msg,
-        'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    }
-    messages.append(message)
-    send(message, broadcast=True)
+    print('Message: ' + msg)
+    new_message = Message(text=msg)
+    db.session.add(new_message)
+    db.session.commit()
+    emit('message', msg, broadcast=True)
 
+# بدء تشغيل التطبيق
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
-    socketio.run(app, host='0.0.0.0', port=port)
+    with app.app_context():
+        db.create_all()
+    socketio.run(app)
