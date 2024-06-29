@@ -1,1 +1,1 @@
-gunicorn app:app & python3 bot.py
+pip install - r requirements.txt & gunicorn app:app
